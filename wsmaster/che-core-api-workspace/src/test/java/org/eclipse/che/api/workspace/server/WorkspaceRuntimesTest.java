@@ -16,6 +16,7 @@ import static org.eclipse.che.api.workspace.shared.Constants.ERROR_MESSAGE_ATTRI
 import static org.eclipse.che.api.workspace.shared.Constants.STOPPED_ABNORMALLY_ATTRIBUTE_NAME;
 import static org.eclipse.che.api.workspace.shared.Constants.STOPPED_ATTRIBUTE_NAME;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
@@ -81,6 +82,10 @@ public class WorkspaceRuntimesTest {
 
   @Mock private ProbeScheduler probeScheduler;
 
+  @Mock private WorkspaceLockService lockService;
+
+  @Mock WorkspaceStatusCache cache;
+
   private RuntimeInfrastructure infrastructure;
   @Mock private InternalEnvironmentFactory<InternalEnvironment> testEnvFactory;
   private WorkspaceRuntimes runtimes;
@@ -97,7 +102,9 @@ public class WorkspaceRuntimesTest {
             sharedPool,
             workspaceDao,
             dbInitializer,
-            probeScheduler);
+            probeScheduler,
+            cache,
+            lockService);
   }
 
   @Test
@@ -110,6 +117,7 @@ public class WorkspaceRuntimesTest {
         .thenReturn(new TestInternalRuntime(context, emptyMap(), WorkspaceStatus.STARTING));
     doReturn(context).when(infrastructure).prepare(eq(identity), any());
     doReturn(mock(InternalEnvironment.class)).when(testEnvFactory).create(any());
+    when(cache.get(anyString())).thenReturn(WorkspaceStatus.STARTING);
 
     // try recover
     runtimes.recoverOne(infrastructure, identity);
@@ -161,34 +169,6 @@ public class WorkspaceRuntimesTest {
   }
 
   @Test
-  public void runtimeIsNotRecoveredIfAnotherRuntimeWithTheSameIdentityAlreadyExists()
-      throws Exception {
-    RuntimeIdentity identity = new RuntimeIdentityImpl("workspace123", "my-env", "myId");
-
-    mockWorkspace(identity);
-    RuntimeContext context = mockContext(identity);
-
-    // runtime 1(has 1 machine) must be successfully saved
-    Map<String, Machine> r1machines = ImmutableMap.of("m1", mock(Machine.class));
-    InternalRuntime runtime1 = spy(new TestInternalRuntime(context, r1machines));
-    when(context.getRuntime()).thenReturn(runtime1);
-    runtimes.recoverOne(infrastructure, identity);
-
-    // runtime 2 must not be saved
-    Map<String, Machine> r2machines =
-        ImmutableMap.of("m1", mock(Machine.class), "m2", mock(Machine.class));
-    InternalRuntime runtime2 = new TestInternalRuntime(context, r2machines);
-    when(context.getRuntime()).thenReturn(runtime2);
-    runtimes.recoverOne(infrastructure, identity);
-
-    WorkspaceImpl workspace = new WorkspaceImpl(identity.getWorkspaceId(), null, null);
-    runtimes.injectRuntime(workspace);
-
-    assertNotNull(workspace.getRuntime());
-    assertEquals(workspace.getRuntime().getMachines().keySet(), r1machines.keySet());
-  }
-
-  @Test
   public void attributesIsSetWhenRuntimeAbnormallyStopped() throws Exception {
     String error = "Some kind of error happened";
     EventService localEventService = new EventService();
@@ -200,7 +180,9 @@ public class WorkspaceRuntimesTest {
             sharedPool,
             workspaceDao,
             dbInitializer,
-            probeScheduler);
+            probeScheduler,
+            cache,
+            lockService);
     localRuntimes.init();
     RuntimeIdentityDto identity =
         DtoFactory.newDto(RuntimeIdentityDto.class)
@@ -210,6 +192,7 @@ public class WorkspaceRuntimesTest {
     mockWorkspace(identity);
     RuntimeContext context = mockContext(identity);
     when(context.getRuntime()).thenReturn(new TestInternalRuntime(context));
+    when(cache.remove(anyString())).thenReturn(WorkspaceStatus.RUNNING);
 
     RuntimeStatusEvent event =
         DtoFactory.newDto(RuntimeStatusEvent.class)
