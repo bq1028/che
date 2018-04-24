@@ -276,8 +276,8 @@ public class WsMasterModule extends AbstractModule {
       Map<String, String> persistenceProperties, String infrastructure) {
     if (OpenShiftInfrastructure.NAME.equals(infrastructure)
         || KubernetesInfrastructure.NAME.equals(infrastructure)) {
-//      Replication is disabled until closing JPA JChannel issue won't be fixed
-//      install(new ReplicationModule(persistenceProperties));
+      // Replication is disabled until closing JPA JChannel issue won't be fixed
+      // install(new ReplicationModule(persistenceProperties));
       bind(RemoteSubscriptionStorage.class).to(InmemoryRemoteSubscriptionStorage.class);
     } else {
       bind(RemoteSubscriptionStorage.class).to(InmemoryRemoteSubscriptionStorage.class);
