@@ -41,6 +41,7 @@ class ServiceTerminator {
   @Inject
   ServiceTerminator(EventService eventService, Set<ServiceTermination> terminations) {
     this.eventService = eventService;
+    checkNamesAndDependencies(terminations);
     this.terminations =
         ImmutableSortedSet.copyOf(new ServiceTerminationComparator(terminations), terminations);
   }
@@ -97,7 +98,31 @@ class ServiceTerminator {
     eventService.publish(new SystemServiceStoppedEvent(termination.getServiceName()));
   }
 
+  private void checkNamesAndDependencies(Set<ServiceTermination> terminationSet) {
+    Set<String> uniqueNamesSet = new HashSet<>();
+    terminationSet.forEach(
+        t -> {
+          if (!uniqueNamesSet.add(t.getServiceName())) {
+            throw new RuntimeException(
+                String.format(
+                    "Duplicate termination found with service name %s", t.getServiceName()));
+          }
+        });
+
+    terminationSet.forEach(
+        t -> {
+          if (!uniqueNamesSet.containsAll(t.getDependencies())) {
+            throw new RuntimeException(
+                String.format(
+                    "Wrong termination dependency found in termination %s", t.getServiceName()));
+          }
+        });
+  }
+
   public static class ServiceTerminationComparator implements Comparator<ServiceTermination> {
+
+    private final Map<String, Set<String>> dependencies;
+
     public ServiceTerminationComparator(Set<ServiceTermination> terminations) {
       this.dependencies =
           terminations
@@ -107,12 +132,11 @@ class ServiceTerminator {
                       ServiceTermination::getServiceName, ServiceTermination::getDependencies));
     }
 
-    private final Map<String, Set<String>> dependencies;
-
     @Override
     public int compare(ServiceTermination o1, ServiceTermination o2) {
       return checkTransitiveDependency(o1.getServiceName(), o2.getServiceName(), new HashSet<>());
     }
+
     // Recursively dig into dependencies and sort them out
     private int checkTransitiveDependency(String o1, String o2, Set<String> loopList) {
       if (loopList.contains(o1)) {
