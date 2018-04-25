@@ -71,7 +71,7 @@ class ServiceTerminator {
         termination.suspend();
       } catch (UnsupportedOperationException e) {
         LOG.info(
-            "Suspending down '{}' service ins't supported, terminating it",
+            "Suspending down '{}' service isn't supported, terminating it",
             termination.getServiceName());
         doTerminate(termination);
       } catch (InterruptedException x) {
