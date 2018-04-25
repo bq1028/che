@@ -140,7 +140,7 @@ public class SystemTerminatorTest {
   @Test(
     dataProvider = "wrongDependencyTerminations",
     expectedExceptions = RuntimeException.class,
-    expectedExceptionsMessageRegExp = "Wrong termination dependency found in termination .+"
+    expectedExceptionsMessageRegExp = "Unknown dependency found in termination .+"
   )
   public void shouldFailOnTerminationsWithUnexistingDeps(Set<ServiceTermination> terminations)
       throws Exception {

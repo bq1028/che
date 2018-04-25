@@ -114,7 +114,7 @@ class ServiceTerminator {
           if (!uniqueNamesSet.containsAll(t.getDependencies())) {
             throw new RuntimeException(
                 String.format(
-                    "Wrong termination dependency found in termination %s", t.getServiceName()));
+                    "Unknown dependency found in termination %s", t.getServiceName()));
           }
         });
   }
