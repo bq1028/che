@@ -663,7 +663,7 @@ public class WorkspaceRuntimes {
    * empty optional is returned in case the workspace doesn't have the runtime.
    */
   public Optional<RuntimeContext> getRuntimeContext(String workspaceId) {
-    try (Unlocker ignored = lockService.readLock(workspaceId)){
+    try (Unlocker ignored = lockService.readLock(workspaceId)) {
       InternalRuntime<?> runtime = runtimes.get(workspaceId);
       if (runtime == null) {
         return Optional.empty();
