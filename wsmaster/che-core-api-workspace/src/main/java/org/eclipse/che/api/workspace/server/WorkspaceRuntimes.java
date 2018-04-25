@@ -606,8 +606,8 @@ public class WorkspaceRuntimes {
   }
 
   /**
-   * Gets the list of workspace id's which are currently starting or stopping on given node. (it's
-   * status is {@link WorkspaceStatus#STARTING} or {@link WorkspaceStatus#STOPPING})
+   * Gets the list of workspaces ids which are currently starting or stopping. (their statuses are
+   * {@link WorkspaceStatus#STARTING} or {@link WorkspaceStatus#STOPPING})
    */
   public Set<String> getInProgress() {
     return statuses
@@ -663,11 +663,13 @@ public class WorkspaceRuntimes {
    * empty optional is returned in case the workspace doesn't have the runtime.
    */
   public Optional<RuntimeContext> getRuntimeContext(String workspaceId) {
-    InternalRuntime<?> runtime = runtimes.get(workspaceId);
-    if (runtime == null) {
-      return Optional.empty();
+    try (Unlocker ignored = lockService.readLock(workspaceId)){
+      InternalRuntime<?> runtime = runtimes.get(workspaceId);
+      if (runtime == null) {
+        return Optional.empty();
+      }
+      return Optional.of(runtime.getContext());
     }
-    return Optional.of(runtime.getContext());
   }
 
   public Set<String> getSupportedRecipes() {
