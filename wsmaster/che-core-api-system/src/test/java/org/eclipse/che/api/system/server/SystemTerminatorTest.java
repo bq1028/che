@@ -91,7 +91,6 @@ public class SystemTerminatorTest {
     verify(eventService).publish(new SuspendingSystemServiceEvent("service1"));
     verify(eventService).publish(new StoppingSystemServiceEvent("service1"));
     verify(eventService).publish(new SystemServiceStoppedEvent("service1"));
-    verify(eventService).publish(new SystemServiceSuspendedEvent("service1"));
     verify(eventService).publish(new SuspendingSystemServiceEvent("service2"));
     verify(eventService).publish(new SystemServiceSuspendedEvent("service2"));
   }

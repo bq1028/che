@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Terminates workspace service. In case of full system shutdown or if current infra isn't support
+ * Terminates workspace service. In case of full system shutdown or if current infra doesn't support
  * workspaces recovery, it blocks starting new workspaces and stops all that already running. In
  * case of suspend and recovery support, blocks starting new workspaces and waits until all
  * workspaces that are currently in a starting/stopping state to finish this process and become

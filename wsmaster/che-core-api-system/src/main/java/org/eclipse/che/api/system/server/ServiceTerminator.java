@@ -23,6 +23,7 @@ import org.eclipse.che.api.system.shared.event.service.StoppingSystemServiceEven
 import org.eclipse.che.api.system.shared.event.service.SuspendingSystemServiceEvent;
 import org.eclipse.che.api.system.shared.event.service.SystemServiceStoppedEvent;
 import org.eclipse.che.api.system.shared.event.service.SystemServiceSuspendedEvent;
+import org.eclipse.che.inject.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,8 @@ class ServiceTerminator {
       eventService.publish(new SuspendingSystemServiceEvent(termination.getServiceName()));
       try {
         termination.suspend();
+        eventService.publish(new SystemServiceSuspendedEvent(termination.getServiceName()));
+        LOG.info("Service '{}' is suspended", termination.getServiceName());
       } catch (UnsupportedOperationException e) {
         LOG.info(
             "Suspending down '{}' service isn't supported, terminating it",
@@ -79,8 +82,6 @@ class ServiceTerminator {
             "Interrupted while waiting for '{}' service to suspend", termination.getServiceName());
         throw x;
       }
-      LOG.info("Service '{}' is suspended", termination.getServiceName());
-      eventService.publish(new SystemServiceSuspendedEvent(termination.getServiceName()));
     }
   }
 
@@ -103,7 +104,7 @@ class ServiceTerminator {
     terminationSet.forEach(
         t -> {
           if (!uniqueNamesSet.add(t.getServiceName())) {
-            throw new RuntimeException(
+            throw new ConfigurationException(
                 String.format(
                     "Duplicate termination found with service name %s", t.getServiceName()));
           }
@@ -113,8 +114,7 @@ class ServiceTerminator {
         t -> {
           if (!uniqueNamesSet.containsAll(t.getDependencies())) {
             throw new RuntimeException(
-                String.format(
-                    "Unknown dependency found in termination %s", t.getServiceName()));
+                String.format("Unknown dependency found in termination %s", t.getServiceName()));
           }
         });
   }
