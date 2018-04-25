@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Terminates system services.
+ * Terminates or suspends system services.
  *
  * @author Yevhenii Voevodin
  */
@@ -48,7 +48,7 @@ class ServiceTerminator {
   }
 
   /**
-   * Terminates system services.
+   * Terminates system services in a order satisfying termination dependencies.
    *
    * @throws InterruptedException when termination is interrupted
    */
@@ -60,7 +60,7 @@ class ServiceTerminator {
   }
 
   /**
-   * Suspends system services.
+   * Suspends system services in a order satisfying termination dependencies.
    *
    * @throws InterruptedException when suspending is interrupted
    */
